@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leave Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#16241F;
+    --ink-soft:#57655F;
+    --canvas:#F4F6F3;
+    --panel:#FFFFFF;
+    --primary:#1E5A66;
+    --primary-dark:#12363F;
+    --primary-tint:#E2EEF0;
+    --success:#3C7A4E;
+    --success-tint:#E7F1E9;
+    --warning:#B9812E;
+    --warning-tint:#F6EBD8;
+    --danger:#A6432E;
+    --danger-tint:#F5E3DE;
+    --line:#DCE2DD;
+    --radius:14px;
+    --font-display:'Fraunces', serif;
+    --font-body:'Inter', sans-serif;
+  }
+  html[dir="rtl"]{
+    --font-display:'Cairo', sans-serif;
+    --font-body:'Cairo', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--canvas);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+  a{color:inherit;}
+  button{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--primary); outline-offset:2px;}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:28px 24px 64px;}
+
+  /* Header */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px; flex-wrap:wrap; margin-bottom:28px;
+  }
+  .brand{display:flex; align-items:baseline; gap:12px;}
+  .brand .mark{
+    width:38px; height:38px; border-radius:10px;
+    background:linear-gradient(155deg, var(--primary), var(--primary-dark));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-family:var(--font-display); font-weight:700; font-size:17px;
+    flex-shrink:0;
+  }
+  .brand h1{
+    font-family:var(--font-display); font-weight:600; font-size:26px; margin:0;
+    letter-spacing:-0.01em;
+  }
+  .brand p{margin:2px 0 0; color:var(--ink-soft); font-size:13.5px;}
+
+  .controls{display:flex; align-items:center; gap:10px;}
+  .segmented{
+    display:flex; background:var(--panel); border:1px solid var(--line);
+    border-radius:999px; padding:3px; gap:2px;
+  }
+  .segmented button{
+    border:none; background:transparent; padding:7px 14px; border-radius:999px;
+    font-size:13px; font-weight:600; color:var(--ink-soft); cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  .segmented button.active{background:var(--primary); color:#fff;}
+  .icon-btn{
+    border:1px solid var(--line); background:var(--panel); border-radius:999px;
+    padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; color:var(--ink);
+  }
+  .icon-btn:hover{border-color:var(--primary);}
+
+  /* Layout */
+  .grid{display:grid; grid-template-columns:340px 1fr; gap:20px;}
+  @media (max-width:860px){ .grid{grid-template-columns:1fr;} }
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px;
+  }
+  .card + .card{margin-top:20px;}
+  .card h2{
+    font-family:var(--font-display); font-size:17px; font-weight:600; margin:0 0 16px;
+  }
+  .card h2 small{display:block; font-family:var(--font-body); font-weight:400; font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+
+  /* Form */
+  .field{margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;}
+  .field input, .field select, .field textarea{
+    width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:9px;
+    font-size:14px; font-family:inherit; background:#fff; color:var(--ink);
+  }
+  .field textarea{resize:vertical; min-height:60px;}
+  .row-2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .days-hint{font-size:12px; color:var(--ink-soft); margin-top:6px;}
+  .submit-btn{
+    width:100%; padding:11px; border:none; border-radius:9px;
+    background:var(--primary); color:#fff; font-weight:600; font-size:14px;
+    cursor:pointer; margin-top:4px; transition:background .15s;
+  }
+  .submit-btn:hover{background:var(--primary-dark);}
+
+  /* Balance gauges */
+  .gauges{display:flex; justify-content:space-between; gap:10px; margin-bottom:6px;}
+  .gauge{text-align:center; flex:1;}
+  .gauge svg{width:72px; height:72px;}
+  .gauge .num{font-family:var(--font-display); font-size:16px; font-weight:600; margin-top:4px;}
+  .gauge .lbl{font-size:11.5px; color:var(--ink-soft);}
+  .balance-edit{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    font-size:12.5px; padding:6px 0; border-top:1px dashed var(--line); margin-top:12px;
+  }
+  .balance-edit input{width:56px; padding:4px 6px; border:1px solid var(--line); border-radius:6px; text-align:center;}
+
+  /* Table area */
+  .table-head{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:14px;}
+  .filters{display:flex; gap:6px; flex-wrap:wrap;}
+  .filters button{
+    border:1px solid var(--line); background:#fff; border-radius:999px; padding:5px 12px;
+    font-size:12.5px; font-weight:600; color:var(--ink-soft); cursor:pointer;
+  }
+  .filters button.active{background:var(--ink); border-color:var(--ink); color:#fff;}
+  .actions-right{display:flex; gap:8px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  thead th{
+    text-align:start; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--ink-soft); font-weight:600; padding:0 10px 10px; border-bottom:1px solid var(--line);
+  }
+  tbody td{padding:12px 10px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tbody tr:last-child td{border-bottom:none;}
+  .emp-name{font-weight:600;}
+  .emp-dept{font-size:12px; color:var(--ink-soft);}
+  .badge{
+    display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:700;
+  }
+  .badge.pending{background:var(--warning-tint); color:var(--warning);}
+  .badge.approved{background:var(--success-tint); color:var(--success);}
+  .badge.rejected{background:var(--danger-tint); color:var(--danger);}
+  .row-actions{display:flex; gap:6px;}
+  .row-actions button{
+    border:none; border-radius:7px; padding:5px 10px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .btn-approve{background:var(--success-tint); color:var(--success);}
+  .btn-reject{background:var(--danger-tint); color:var(--danger);}
+  .empty{padding:40px 10px; text-align:center; color:var(--ink-soft); font-size:13.5px;}
+
+  .sync-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    margin-top:18px; padding:14px 16px; border-radius:12px; background:var(--primary-tint);
+    font-size:13px;
+  }
+  .sync-bar .status-dot{width:8px; height:8px; border-radius:50%; background:var(--warning); display:inline-block; margin-inline-end:7px;}
+  .sync-bar button{
+    border:none; border-radius:8px; padding:8px 14px; font-size:12.5px; font-weight:700; cursor:pointer;
+    background:var(--primary); color:#fff;
+  }
+  .sync-bar .ghost{background:transparent; border:1px solid var(--primary); color:var(--primary);}
+
+  .note{font-size:12px; color:var(--ink-soft); margin-top:10px; line-height:1.6;}
+
+  .toast{
+    position:fixed; bottom:22px; inset-inline-start:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; padding:11px 20px; border-radius:999px;
+    font-size:13.5px; font-weight:500; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+    box-shadow:0 8px 24px rgba(0,0,0,.18); z-index:50; white-space:nowrap;
+  }
+  html[dir="rtl"] .toast{transform:translateX(50%);}
+  .toast.show{opacity:1;}
+
+  @keyframes fadeIn{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+  tbody tr{animation:fadeIn .3s ease;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark" id="markLetter">L</div>
+      <div>
+        <h1 id="t-title">Leave Portal</h1>
+        <p id="t-subtitle">Request, review, and track vacation days</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="segmented" id="roleSwitch">
+        <button data-role="employee" class="active" id="t-roleEmployee">Employee</button>
+        <button data-role="manager" id="t-roleManager">Manager</button>
+      </div>
+      <button class="icon-btn" id="langToggle">العربية</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT COLUMN -->
+    <div>
+      <div class="card" id="formCard">
+        <h2 id="t-newRequestTitle">New request<small id="t-newRequestSub">Weekends (Fri–Sat) are excluded automatically</small></h2>
+        <form id="requestForm">
+          <div class="field">
+            <label id="t-fieldName">Employee name</label>
+            <input type="text" id="fName" required>
+          </div>
+          <div class="field">
+            <label id="t-fieldDept">Department</label>
+            <input type="text" id="fDept" required>
+          </div>
+          <div class="field">
+            <label id="t-fieldType">Leave type</label>
+            <select id="fType">
+              <option value="annual" id="t-typeAnnual">Annual</option>
+              <option value="sick" id="t-typeSick">Sick</option>
+              <option value="emergency" id="t-typeEmergency">Emergency</option>
+              <option value="unpaid" id="t-typeUnpaid">Unpaid</option>
+            </select>
+          </div>
+          <div class="row-2">
+            <div class="field">
+              <label id="t-fieldStart">Start date</label>
+              <input type="date" id="fStart" required>
+            </div>
+            <div class="field">
+              <label id="t-fieldEnd">End date</label>
+              <input type="date" id="fEnd" required>
+            </div>
+          </div>
+          <div class="days-hint" id="daysHint"></div>
+          <div class="field" style="margin-top:14px;">
+            <label id="t-fieldReason">Reason (optional)</label>
+            <textarea id="fReason"></textarea>
+          </div>
+          <button type="submit" class="submit-btn" id="t-submitBtn">Submit request</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 id="t-balanceTitle">Leave balance</h2>
+        <div class="gauges" id="gaugeWrap"></div>
+        <div class="balance-edit">
+          <span id="t-annualLabel">Annual days/year</span>
+          <input type="number" id="annualTotal" value="21" min="0">
+        </div>
+        <div class="balance-edit">
+          <span id="t-sickLabel">Sick days/year</span>
+          <input type="number" id="sickTotal" value="30" min="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="card">
+      <div class="table-head">
+        <div class="filters" id="filterWrap"></div>
+        <div class="actions-right">
+          <button class="icon-btn" id="exportBtn">⭳ <span id="t-exportBtn">Export to Excel</span></button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th id="t-colEmployee">Employee</th>
+              <th id="t-colType">Type</th>
+              <th id="t-colDates">Dates</th>
+              <th id="t-colDays">Days</th>
+              <th id="t-colReason">Reason</th>
+              <th id="t-colStatus">Status</th>
+              <th id="t-colActions"></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty" id="emptyState" style="display:none;"></div>
+      </div>
+
+      <div class="sync-bar">
+        <div><span class="status-dot"></span><span id="syncStatusText">OneDrive sync not connected yet</span></div>
+        <div style="display:flex; gap:8px;">
+          <button class="ghost" id="syncHelpBtn" style="background:transparent;border:1px solid var(--primary);color:var(--primary);">?</button>
+          <button id="syncBtn">Sync now</button>
+        </div>
+      </div>
+      <p class="note" id="t-dataNote">Requests are kept in this browser tab only and will reset on reload. Use "Export to Excel" to save a copy now, or connect automatic OneDrive sync (see setup guide).</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ CONFIG ============ */
+// Paste your Power Automate "When an HTTP request is received" URL below to enable
+// automatic saving to an Excel file / SharePoint list in OneDrive. Leave blank to
+// use manual Export to Excel only. See the setup guide for how to create this flow.
+const FLOW_URL = "";
+
+/* ============ TRANSLATIONS ============ */
+const T = {
+  en:{
+    title:"Leave Portal", subtitle:"Request, review, and track vacation days",
+    roleEmployee:"Employee", roleManager:"Manager",
+    newRequestTitle:"New request", newRequestSub:"Weekends (Fri–Sat) are excluded automatically",
+    fieldName:"Employee name", fieldDept:"Department", fieldType:"Leave type",
+    fieldStart:"Start date", fieldEnd:"End date", fieldReason:"Reason (optional)",
+    typeAnnual:"Annual", typeSick:"Sick", typeEmergency:"Emergency", typeUnpaid:"Unpaid",
+    submitBtn:"Submit request", balanceTitle:"Leave balance",
+    annualLabel:"Annual days/year", sickLabel:"Sick days/year",
+    colEmployee:"Employee", colType:"Type", colDates:"Dates", colDays:"Days",
+    colReason:"Reason", colStatus:"Status",
+    exportBtn:"Export to Excel",
+    filterAll:"All", statusPending:"Pending", statusApproved:"Approved", statusRejected:"Rejected",
+    approveBtn:"Approve", rejectBtn:"Reject",
+    dataNote:'Requests are kept in this browser tab only and will reset on reload. Use "Export to Excel" to save a copy now, or connect automatic OneDrive sync (see setup guide).',
+    syncNotConfigured:"OneDrive sync not connected yet", syncConnected:"Synced to OneDrive via Power Automate",
+    syncBtn:"Sync now", emptyState:"No requests yet — submit one on the left to see it here.",
+    toastSubmitted:"Request submitted", toastApproved:"Request approved", toastRejected:"Request rejected",
+    toastExported:"Excel file downloaded", toastNoFlow:"Sync isn't configured yet — paste your Power Automate URL into FLOW_URL in the code, or use Export to Excel for now.",
+    toastSynced:"Sent to your OneDrive flow", toastSyncFail:"Couldn't reach the flow — check the URL and that it's turned on.",
+    days:"days", daysHint:(n)=>n>0?`${n} working day${n===1?'':'s'} (weekends excluded)`:'Pick a start and end date',
+    helpTitle:"To connect OneDrive: create a Power Automate flow with an HTTP trigger that adds a row to an Excel table or SharePoint list, then paste its URL into FLOW_URL near the top of this file's code."
+  },
+  ar:{
+    title:"بوابة الإجازات", subtitle:"تقديم طلبات الإجازة ومتابعتها واعتمادها",
+    roleEmployee:"موظف", roleManager:"مدير",
+    newRequestTitle:"طلب جديد", newRequestSub:"يتم استبعاد عطلة نهاية الأسبوع (الجمعة والسبت) تلقائيًا",
+    fieldName:"اسم الموظف", fieldDept:"القسم", fieldType:"نوع الإجازة",
+    fieldStart:"تاريخ البداية", fieldEnd:"تاريخ النهاية", fieldReason:"السبب (اختياري)",
+    typeAnnual:"سنوية", typeSick:"مرضية", typeEmergency:"طارئة", typeUnpaid:"بدون راتب",
+    submitBtn:"إرسال الطلب", balanceTitle:"رصيد الإجازات",
+    annualLabel:"الأيام السنوية", sickLabel:"الأيام المرضية",
+    colEmployee:"الموظف", colType:"النوع", colDates:"التواريخ", colDays:"الأيام",
+    colReason:"السبب", colStatus:"الحالة",
+    exportBtn:"تصدير إلى إكسل",
+    filterAll:"الكل", statusPending:"قيد الانتظار", statusApproved:"معتمدة", statusRejected:"مرفوضة",
+    approveBtn:"اعتماد", rejectBtn:"رفض",
+    dataNote:"يتم حفظ الطلبات في هذا المتصفح فقط وستُفقد عند إعادة التحميل. استخدم «تصدير إلى إكسل» لحفظ نسخة الآن، أو فعّل المزامنة التلقائية مع OneDrive (راجع دليل الإعداد).",
+    syncNotConfigured:"لم تُفعَّل المزامنة مع OneDrive بعد", syncConnected:"تمت المزامنة مع OneDrive عبر Power Automate",
+    syncBtn:"مزامنة الآن", emptyState:"لا توجد طلبات بعد — أرسل طلبًا من القائمة على اليسار لتظهر هنا.",
+    toastSubmitted:"تم إرسال الطلب", toastApproved:"تم اعتماد الطلب", toastRejected:"تم رفض الطلب",
+    toastExported:"تم تنزيل ملف إكسل", toastNoFlow:"لم تُفعَّل المزامنة بعد — أضف رابط Power Automate الخاص بك إلى FLOW_URL في الكود، أو استخدم التصدير إلى إكسل حاليًا.",
+    toastSynced:"تم الإرسال إلى تدفق OneDrive الخاص بك", toastSyncFail:"تعذر الوصول إلى التدفق — تحقق من الرابط ومن أنه مفعّل.",
+    days:"يوم", daysHint:(n)=>n>0?`${n} يوم عمل (باستثناء عطلة نهاية الأسبوع)`:'اختر تاريخ البداية والنهاية',
+    helpTitle:"لتفعيل الربط مع OneDrive: أنشئ تدفق Power Automate بمشغّل HTTP يضيف صفًا إلى جدول إكسل أو قائمة SharePoint، ثم الصق رابطه في FLOW_URL أعلى كود هذا الملف."
+  }
+};
+
+let lang = "en";
+let role = "employee";
+let filter = "all";
+let flowConnected = false;
+let requests = [
+  {id:1, name:"Sara Ahmed", dept:"Finance", type:"annual", start:"2026-07-20", end:"2026-07-24", days:5, reason:"Family trip", status:"pending"},
+  {id:2, name:"Omar Khaled", dept:"IT", type:"sick", start:"2026-07-10", end:"2026-07-11", days:2, reason:"", status:"approved"}
+];
+let nextId = 3;
+
+/* ============ HELPERS ============ */
+function workingDays(startStr, endStr){
+  if(!startStr || !endStr) return 0;
+  const start = new Date(startStr), end = new Date(endStr);
+  if(end < start) return 0;
+  let count = 0;
+  let d = new Date(start);
+  while(d <= end){
+    const day = d.getDay(); // 0=Sun ... 5=Fri, 6=Sat
+    if(day !== 5 && day !== 6) count++;
+    d.setDate(d.getDate()+1);
+  }
+  return count;
+}
+
+function toast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>el.classList.remove('show'), 2600);
+}
+
+function fmtDate(str){
+  const d = new Date(str);
+  return d.toLocaleDateString(lang==='ar'?'ar-EG':'en-GB', {day:'2-digit', month:'short', year:'numeric'});
+}
+
+/* ============ RENDER: STATIC TEXT ============ */
+function applyTranslations(){
+  const t = T[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('markLetter').textContent = lang==='ar' ? 'إ' : 'L';
+
+  const map = {
+    't-title':t.title, 't-subtitle':t.subtitle,
+    't-roleEmployee':t.roleEmployee, 't-roleManager':t.roleManager,
+    't-newRequestTitle':null, // handled specially (has nested small)
+    't-fieldName':t.fieldName, 't-fieldDept':t.fieldDept, 't-fieldType':t.fieldType,
+    't-fieldStart':t.fieldStart, 't-fieldEnd':t.fieldEnd, 't-fieldReason':t.fieldReason,
+    't-typeAnnual':t.typeAnnual, 't-typeSick':t.typeSick, 't-typeEmergency':t.typeEmergency, 't-typeUnpaid':t.typeUnpaid,
+    't-submitBtn':t.submitBtn, 't-balanceTitle':t.balanceTitle,
+    't-annualLabel':t.annualLabel, 't-sickLabel':t.sickLabel,
+    't-colEmployee':t.colEmployee, 't-colType':t.colType, 't-colDates':t.colDates, 't-colDays':t.colDays,
+    't-colReason':t.colReason, 't-colStatus':t.colStatus,
+    't-exportBtn':t.exportBtn, 't-dataNote':t.dataNote
+  };
+  for(const id in map){
+    if(map[id]===null) continue;
+    const el = document.getElementById(id);
+    if(el) el.textContent = map[id];
+  }
+  document.getElementById('t-newRequestTitle').innerHTML = t.newRequestTitle + '<small>'+t.newRequestSub+'</small>';
+  document.getElementById('langToggle').textContent = lang === 'en' ? 'العربية' : 'English';
+  document.getElementById('syncStatusText').textContent = flowConnected ? t.syncConnected : t.syncNotConfigured;
+  document.getElementById('syncBtn').textContent = t.syncBtn;
+
+  renderFilters();
+  renderGauges();
+  renderTable();
+  updateDaysHint();
+}
+
+/* ============ RENDER: DYNAMIC ============ */
+function renderFilters(){
+  const t = T[lang];
+  const labels = [
+    {key:'all', label:t.filterAll},
+    {key:'pending', label:t.statusPending},
+    {key:'approved', label:t.statusApproved},
+    {key:'rejected', label:t.statusRejected}
+  ];
+  const wrap = document.getElementById('filterWrap');
+  wrap.innerHTML = '';
+  labels.forEach(l=>{
+    const b = document.createElement('button');
+    b.textContent = l.label;
+    if(filter === l.key) b.classList.add('active');
+    b.onclick = ()=>{ filter = l.key; renderTable(); renderFilters(); };
+    wrap.appendChild(b);
+  });
+}
+
+function renderGauges(){
+  const t = T[lang];
+  const annualTotal = parseInt(document.getElementById('annualTotal').value) || 0;
+  const sickTotal = parseInt(document.getElementById('sickTotal').value) || 0;
+  const usedAnnual = requests.filter(r=>r.type==='annual' && r.status!=='rejected').reduce((s,r)=>s+r.days,0);
+  const usedSick = requests.filter(r=>r.type==='sick' && r.status!=='rejected').reduce((s,r)=>s+r.days,0);
+  const usedUnpaid = requests.filter(r=>r.type==='unpaid' && r.status!=='rejected').reduce((s,r)=>s+r.days,0);
+
+  const gauges = [
+    {label:t.typeAnnual, used:usedAnnual, total:annualTotal, color:'var(--primary)'},
+    {label:t.typeSick, used:usedSick, total:sickTotal, color:'var(--warning)'},
+    {label:t.typeUnpaid, used:usedUnpaid, total:null, color:'var(--ink-soft)'}
+  ];
+  const wrap = document.getElementById('gaugeWrap');
+  wrap.innerHTML = '';
+  gauges.forEach(g=>{
+    const pct = g.total ? Math.min(1, g.used/g.total) : (g.used>0?1:0);
+    const r = 30, c = 2*Math.PI*r;
+    const offset = c * (1-pct);
+    const div = document.createElement('div');
+    div.className = 'gauge';
+    div.innerHTML = `
+      <svg viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="var(--line)" stroke-width="7"/>
+        <circle cx="36" cy="36" r="${r}" fill="none" stroke="${g.color}" stroke-width="7"
+          stroke-dasharray="${c}" stroke-dashoffset="${offset}" stroke-linecap="round"
+          transform="rotate(-90 36 36)"/>
+        <text x="36" y="41" text-anchor="middle" font-size="14" font-weight="700" fill="var(--ink)">${g.used}</text>
+      </svg>
+      <div class="num">${g.total!==null ? g.used+' / '+g.total : g.used}</div>
+      <div class="lbl">${g.label}</div>
+    `;
+    wrap.appendChild(div);
+  });
+}
+
+function renderTable(){
+  const t = T[lang];
+  const body = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  const list = requests.filter(r => filter==='all' || r.status===filter)
+                        .sort((a,b)=>b.id-a.id);
+  body.innerHTML = '';
+  if(list.length===0){
+    empty.style.display = 'block';
+    empty.textContent = t.emptyState;
+    document.querySelector('table').style.display = 'none';
+  } else {
+    empty.style.display = 'none';
+    document.querySelector('table').style.display = '';
+  }
+  list.forEach(r=>{
+    const tr = document.createElement('tr');
+    const statusLabel = r.status==='pending'?t.statusPending : r.status==='approved'?t.statusApproved : t.statusRejected;
+    const typeLabel = {annual:t.typeAnnual, sick:t.typeSick, emergency:t.typeEmergency, unpaid:t.typeUnpaid}[r.type];
+    let actionsHtml = '';
+    if(role === 'manager' && r.status === 'pending'){
+      actionsHtml = `<div class="row-actions">
+        <button class="btn-approve" data-act="approve" data-id="${r.id}">${t.approveBtn}</button>
+        <button class="btn-reject" data-act="reject" data-id="${r.id}">${t.rejectBtn}</button>
+      </div>`;
+    }
+    tr.innerHTML = `
+      <td><div class="emp-name">${escapeHtml(r.name)}</div><div class="emp-dept">${escapeHtml(r.dept)}</div></td>
+      <td>${typeLabel}</td>
+      <td>${fmtDate(r.start)} → ${fmtDate(r.end)}</td>
+      <td>${r.days}</td>
+      <td>${escapeHtml(r.reason || '—')}</td>
+      <td><span class="badge ${r.status}">${statusLabel}</span></td>
+      <td>${actionsHtml}</td>
+    `;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll('button[data-act]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = parseInt(btn.dataset.id);
+      const req = requests.find(r=>r.id===id);
+      if(!req) return;
+      req.status = btn.dataset.act === 'approve' ? 'approved' : 'rejected';
+      toast(btn.dataset.act === 'approve' ? T[lang].toastApproved : T[lang].toastRejected);
+      renderTable(); renderGauges();
+    };
+  });
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function updateDaysHint(){
+  const s = document.getElementById('fStart').value;
+  const e = document.getElementById('fEnd').value;
+  const n = workingDays(s,e);
+  document.getElementById('daysHint').textContent = T[lang].daysHint(n);
+}
+
+/* ============ EVENTS ============ */
+document.getElementById('roleSwitch').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-role]');
+  if(!btn) return;
+  role = btn.dataset.role;
+  document.querySelectorAll('#roleSwitch button').forEach(b=>b.classList.toggle('active', b===btn));
+  document.getElementById('formCard').style.display = role === 'employee' ? '' : 'none';
+  renderTable();
+});
+
+document.getElementById('langToggle').addEventListener('click', ()=>{
+  lang = lang === 'en' ? 'ar' : 'en';
+  applyTranslations();
+});
+
+document.getElementById('fStart').addEventListener('change', updateDaysHint);
+document.getElementById('fEnd').addEventListener('change', updateDaysHint);
+document.getElementById('annualTotal').addEventListener('input', renderGauges);
+document.getElementById('sickTotal').addEventListener('input', renderGauges);
+
+document.getElementById('requestForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('fName').value.trim();
+  const dept = document.getElementById('fDept').value.trim();
+  const type = document.getElementById('fType').value;
+  const start = document.getElementById('fStart').value;
+  const end = document.getElementById('fEnd').value;
+  const reason = document.getElementById('fReason').value.trim();
+  const days = workingDays(start, end);
+  if(!name || !dept || !start || !end || days<=0) return;
+
+  const newReq = {id: nextId++, name, dept, type, start, end, days, reason, status:'pending'};
+  requests.push(newReq);
+  e.target.reset();
+  document.getElementById('daysHint').textContent = T[lang].daysHint(0);
+  toast(T[lang].toastSubmitted);
+  filter = 'all';
+  renderFilters(); renderTable(); renderGauges();
+
+  if(FLOW_URL){
+    fetch(FLOW_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(newReq)
+    }).then(()=>{ flowConnected = true; document.getElementById('syncStatusText').textContent = T[lang].syncConnected; toast(T[lang].toastSynced); })
+      .catch(()=> toast(T[lang].toastSyncFail));
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const rows = requests.map(r=>({
+    Employee:r.name, Department:r.dept, Type:r.type, Start:r.start, End:r.end,
+    Days:r.days, Reason:r.reason, Status:r.status
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Leave Requests");
+  XLSX.writeFile(wb, "leave_requests.xlsx");
+  toast(T[lang].toastExported);
+});
+
+document.getElementById('syncBtn').addEventListener('click', ()=>{
+  if(!FLOW_URL){ toast(T[lang].toastNoFlow); return; }
+  fetch(FLOW_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(requests)
+  }).then(()=>{ flowConnected = true; document.getElementById('syncStatusText').textContent = T[lang].syncConnected; toast(T[lang].toastSynced); })
+    .catch(()=> toast(T[lang].toastSyncFail));
+});
+
+document.getElementById('syncHelpBtn').addEventListener('click', ()=>{
+  alert(T[lang].helpTitle);
+});
+
+/* ============ INIT ============ */
+applyTranslations();
+</script>
+</body>
+</html>
